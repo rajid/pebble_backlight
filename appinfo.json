@@ -1,0 +1,31 @@
+{
+  "uuid": "27823a07-391e-4a69-b02d-2d8587f66b9b",
+  "shortName": "backlight",
+  "longName": "backlight",
+  "companyName": "raj",
+  "versionLabel": "2.0",
+  "sdkVersion": "3",
+  "targetPlatforms": [
+    "aplite",
+    "basalt",
+    "chalk"
+  ],
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "start_hour": 0,
+    "start_minute": 1,
+    "stop_hour": 2,
+    "stop_minute": 3,
+    "start_alarm": 4,
+    "stop_alarm": 5,
+    "duration": 6,
+    "samples": 7,
+    "charging": 8,
+    "plugged": 9
+  },
+  "resources": {
+    "media": []
+  }
+}
