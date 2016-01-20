@@ -4,8 +4,8 @@
 #define SAMPLES		7               /* copied from backlight.c */
 #define CHARGING	8
 #define PLUGGED		9
+#define AMBIENT		10
 
-// void light_enable(bool enable);
 void light_enable_interaction(void);
 void light_enable(bool val);
 
@@ -18,6 +18,7 @@ bool charging=false;
 bool light_charging = false;            /* current have light on while charging */
 bool plugged=false;
 bool light_plugged = false;            /* current have light on while powered */
+bool ambient=false;
 
 
 /*
@@ -79,7 +80,11 @@ handle_accel(AccelData *data, uint32_t num_samples)
     }
     
     if (watch_level_start != 0 && (time(0L) - watch_level_start) > 0) {
-	backlight_enable(true);
+        if (ambient) {
+            backlight_enable(true);
+        } else {
+            light_enable(true);
+        }
 	light_on = true;
 	app_timer_register(time_duration * 1000, light_callback, NULL);
 	watch_level_start = 0;
@@ -118,18 +123,18 @@ int main(void) {
     val = persist_read_int(DURATION);
     if (val) {
 	time_duration = (int)val;
-	APP_LOG(APP_LOG_LEVEL_WARNING, "time_duration=%u", (uint)val);
     } else {
         time_duration = 5;              /* default */
     }
+    APP_LOG(APP_LOG_LEVEL_WARNING, "time_duration=%u", (uint)val);
 
     val = persist_read_int(SAMPLES);
     if (val) {
 	samples = (int)val;
-	APP_LOG(APP_LOG_LEVEL_WARNING, "samples=%u", (uint)val);
     } else {
         samples = 1;              /* default */
     }
+    APP_LOG(APP_LOG_LEVEL_WARNING, "samples=%u", (uint)val);
 
     accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
     accel_data_service_subscribe(samples, handle_accel);
@@ -138,20 +143,28 @@ int main(void) {
     val = persist_read_bool(CHARGING);
     if (val) {
 	charging = (bool)val;
-	APP_LOG(APP_LOG_LEVEL_WARNING, "light when charging = %u",
-                (uint)val);
     } else {
         charging = false;              /* default */
     }
+    APP_LOG(APP_LOG_LEVEL_WARNING, "light when charging = %u",
+            (uint)val);
 
     val = persist_read_bool(PLUGGED);
     if (val) {
 	plugged = (bool)val;
-	APP_LOG(APP_LOG_LEVEL_WARNING, "light when plugged = %u",
-                (uint)val);
     } else {
         plugged = false;              /* default */
     }
+    APP_LOG(APP_LOG_LEVEL_WARNING, "light when plugged = %u",
+            (uint)val);
+
+    val = persist_read_bool(AMBIENT);
+    if (val) {
+	ambient = (bool)val;
+    } else {
+        ambient = false;              /* default */
+    }
+    APP_LOG(APP_LOG_LEVEL_WARNING, "ambient=%u", (uint)val);
 
     if (charging || plugged) {
         battery_state_service_subscribe(battery_handler);

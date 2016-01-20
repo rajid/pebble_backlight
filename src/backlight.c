@@ -10,6 +10,7 @@
 #define SAMPLES		7
 #define CHARGING	8
 #define PLUGGED		9
+#define AMBIENT		10
 
 /* Screen size info */
 #if defined(PBL_RECT)
@@ -58,8 +59,9 @@ int stop_min;
 int time_duration;
 WakeupId start_alarm_id;
 WakeupId stop_alarm_id;
-bool charging_mode=false;                       /* on while charging mode */
-bool plugged_mode=false;                       /* on while plugged in mode */
+bool charging_mode=false;               /* on while charging mode */
+bool plugged_mode=false;                /* on while plugged in mode */
+bool ambient=false;                     /* recognize ambient light */
 
 Window *sample_window=NULL;
 TextLayer *sample_layer=NULL;
@@ -80,6 +82,7 @@ const SimpleMenuItem top_menu_items[]={
     {"Responsiveness", NULL, NULL, (SimpleMenuLayerSelectCallback)top_menu_callback},
     {"Charging light", NULL, NULL, (SimpleMenuLayerSelectCallback)top_menu_callback},
     {"Powered light", NULL, NULL, (SimpleMenuLayerSelectCallback)top_menu_callback},
+    {"Use light sensor", NULL, NULL, (SimpleMenuLayerSelectCallback)top_menu_callback},
 };
 #define num_top_menu_items (sizeof(top_menu_items) / sizeof(*top_menu_items))
 
@@ -595,6 +598,29 @@ on_while_plugged (void)
 }
 
 
+/*
+ * Use the API which only turns on the light when needed,
+ * watching ambient light.
+ */
+static void
+set_ambient (void) 
+{
+    static char buffer[40];
+
+    if (ambient) {
+        ambient = false;
+    } else {
+        ambient = true;
+    }
+
+    persist_write_bool(AMBIENT, ambient);
+    snprintf(buffer, sizeof(buffer), "Use of ambient light sensor is %s",
+             ambient ? "on" : "off");
+    text_layer_set_text(text_layer, buffer);
+
+    restart_worker();
+}
+
 
 /*************************************
  * Main menu definitions
@@ -610,10 +636,22 @@ top_menu_callback (int index, void *context)
 
     switch ( index ) {
     case 0:				/* toggle auto-backlight */
+        app_log(APP_LOG_LEVEL_WARNING,
+                __FILE__,
+                __LINE__,
+                "Toggling backlight");
 	if (app_worker_is_running()) {
+            app_log(APP_LOG_LEVEL_WARNING,
+                    __FILE__,
+                    __LINE__,
+                    "Toggling backlight off");
 	    text_layer_set_text(text_layer, "Light off");
 	    app_worker_kill();
 	} else {
+            app_log(APP_LOG_LEVEL_WARNING,
+                    __FILE__,
+                    __LINE__,
+                    "Toggling backlight on");
 	    text_layer_set_text(text_layer, "Light on");
 	    app_worker_launch();
 	}
@@ -646,6 +684,10 @@ top_menu_callback (int index, void *context)
     case 7:
         on_while_plugged();            /* keep light on while powered */
         break;
+
+    case 8:
+        set_ambient();               /* Use ambient light control */
+        break;
     }
 
     window_stack_pop(true); /* menu window */
@@ -666,14 +708,22 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 
-	app_worker_launch();
-	text_layer_set_text(text_layer, "Light on");
+    app_log(APP_LOG_LEVEL_WARNING,
+            __FILE__,
+            __LINE__,
+            "Turning backlight on");
+    app_worker_launch();
+    text_layer_set_text(text_layer, "Light on");
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 
-	app_worker_kill();
-	text_layer_set_text(text_layer, "Light off");
+    app_log(APP_LOG_LEVEL_WARNING,
+            __FILE__,
+            __LINE__,
+            "Turning backlight off");
+    app_worker_kill();
+    text_layer_set_text(text_layer, "Light off");
 }
 
 static void click_config_provider(void *context) {

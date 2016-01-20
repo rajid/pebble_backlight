@@ -23,7 +23,8 @@
     "duration": 6,
     "samples": 7,
     "charging": 8,
-    "plugged": 9
+    "plugged": 9,
+    "ambient": 10
   },
   "resources": {
     "media": []
