@@ -124,7 +124,18 @@ schedule_wakeup (WakeupId *alarm_id,
 	    "time increment is %d", (int)time_inc);
 
     alarm_time = now + time_inc;
-    *alarm_id = wakeup_schedule(alarm_time, which, false);
+
+    /* If the choosen alarm time is taken, make it a minute
+       earlier until it works */
+    for (*alarm_id = E_RANGE ; *alarm_id == E_RANGE ;
+         alarm_time -= (1 * MINUTES)) {
+        *alarm_id = wakeup_schedule(alarm_time, which, false);
+        app_log(APP_LOG_LEVEL_WARNING,
+                __FILE__,
+                __LINE__,
+                "wakeup_schedule returned %d", (int)*alarm_id);
+    }
+    
     persist_write_int(which_mem, (uint32_t)(*alarm_id));
 }
 
