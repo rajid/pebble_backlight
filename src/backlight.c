@@ -96,6 +96,29 @@ const SimpleMenuSection top_menu_sections={.title="Main menu", .items=top_menu_i
  ****************************************************************************/
 
 
+WakeupId
+schedule_my_wakeup (time_t alarm_time,
+                    int alarm_num)
+{
+    WakeupId wake_id;
+    
+    /* Schedule a new (snooze) wakeup */
+    for (wake_id = E_RANGE ; wake_id == E_RANGE ; alarm_time -= (1 * MINUTES)) {
+        wake_id = wakeup_schedule(alarm_time,
+                                  alarm_num,
+                                  true);
+        app_log(APP_LOG_LEVEL_WARNING,
+                __FILE__,
+                __LINE__,
+                "My wakeup - Alarm for time %u (context=%d) set with id %d",
+                (uint)alarm_time, alarm_num, (int)wake_id);
+        if (wake_id > 0) break;
+    }
+
+    return(wake_id);
+}
+
+
 void
 schedule_wakeup (WakeupId *alarm_id,
 		 int hour, int min,
@@ -129,7 +152,7 @@ schedule_wakeup (WakeupId *alarm_id,
        earlier until it works */
     for (*alarm_id = E_RANGE ; *alarm_id == E_RANGE ;
          alarm_time -= (1 * MINUTES)) {
-        *alarm_id = wakeup_schedule(alarm_time, which, false);
+        *alarm_id = schedule_my_wakeup(alarm_time, which);
         app_log(APP_LOG_LEVEL_WARNING,
                 __FILE__,
                 __LINE__,
@@ -408,7 +431,7 @@ set_timeout (void)
     }
     
     number_window_set_max(number_window, 60);
-    number_window_set_min(number_window, 1);
+    number_window_set_min(number_window, 0);
     number_window_set_value(number_window, time_duration);
 
     window_stack_push((Window *)number_window, true);

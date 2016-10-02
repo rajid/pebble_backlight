@@ -3,12 +3,13 @@
   "shortName": "backlight",
   "longName": "backlight",
   "companyName": "raj",
-  "versionLabel": "2.0",
-  "sdkVersion": "3",
+  "versionLabel": "2.1",
+  "sdkVersion": "4",
   "targetPlatforms": [
     "aplite",
     "basalt",
-    "chalk"
+    "chalk",
+    "diorite"
   ],
   "watchapp": {
     "watchface": false

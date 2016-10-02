@@ -41,6 +41,7 @@ light_callback (void *data)
 
     light_on = false;
     light_enable(false);
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Light off\n");
 }
 
 
@@ -75,6 +76,10 @@ handle_accel(AccelData *data, uint32_t num_samples)
                    (data[i].y < (Y_RANGE_LOW - 100) || data[i].y > (Y_RANGE_HIGH + 100))) {
             watch_level_start = 0;
             watch_outside_range = true;
+            if (time_duration == 0 && light_on) {
+                APP_LOG(APP_LOG_LEVEL_WARNING, "Turning light off\n");
+                light_callback(NULL);
+            }
             break;
         }
     }
@@ -86,7 +91,11 @@ handle_accel(AccelData *data, uint32_t num_samples)
             light_enable(true);
         }
 	light_on = true;
-	app_timer_register(time_duration * 1000, light_callback, NULL);
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Light on\n");
+        if (time_duration) {
+            APP_LOG(APP_LOG_LEVEL_WARNING, "Scheduling light off, duration = %d\n", (int)time_duration);
+            app_timer_register(time_duration * 1000, light_callback, NULL);
+        }
 	watch_level_start = 0;
     }
 }
@@ -98,14 +107,17 @@ battery_handler (BatteryChargeState charge)
 {
 
     if (charge.is_charging && charging) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Charging and lit\n");
         light_enable(true);
         light_charging = true;
         light_on = true;
     } else if (charge.is_plugged && plugged) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Plugged in and lit\n");
         light_enable(true);
         light_plugged = true;
         light_on = true;
     } else {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Not lit\n");
         light_charging = false;
         light_plugged = false;
         if (light_on == true) {
@@ -121,11 +133,7 @@ int main(void) {
     uint32_t	val;
 
     val = persist_read_int(DURATION);
-    if (val) {
-	time_duration = (int)val;
-    } else {
-        time_duration = 5;              /* default */
-    }
+    time_duration = (int)val;
     APP_LOG(APP_LOG_LEVEL_WARNING, "time_duration=%u", (uint)val);
 
     val = persist_read_int(SAMPLES);
