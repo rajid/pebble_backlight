@@ -3,8 +3,8 @@
   "shortName": "backlight",
   "longName": "backlight",
   "companyName": "raj",
-  "versionLabel": "2.1",
-  "sdkVersion": "4",
+  "versionLabel": "2.3",
+  "sdkVersion": "3",
   "targetPlatforms": [
     "aplite",
     "basalt",

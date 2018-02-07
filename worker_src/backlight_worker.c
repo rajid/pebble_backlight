@@ -54,6 +54,7 @@ void
 handle_accel(AccelData *data, uint32_t num_samples)
 {
     static bool watch_outside_range = true;
+    static bool watch_on;
 
     uint i;
 
@@ -76,7 +77,7 @@ handle_accel(AccelData *data, uint32_t num_samples)
                    (data[i].y < (Y_RANGE_LOW - 100) || data[i].y > (Y_RANGE_HIGH + 100))) {
             watch_level_start = 0;
             watch_outside_range = true;
-            if (time_duration == 0 && light_on) {
+            if (/* time_duration == 0 */ (time(0L) - watch_level_start > 1) && light_on) {
                 APP_LOG(APP_LOG_LEVEL_WARNING, "Turning light off\n");
                 light_callback(NULL);
             }
@@ -84,6 +85,9 @@ handle_accel(AccelData *data, uint32_t num_samples)
         }
     }
     
+    /*
+     * If new state is "off", do this now
+     */
     if (watch_level_start != 0 && (time(0L) - watch_level_start) > 0) {
         if (ambient) {
             backlight_enable(true);
